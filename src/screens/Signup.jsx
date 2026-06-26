@@ -1,157 +1,145 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
   updateProfile,
+  GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-
-import { auth, googleProvider } from "../firebase";
-import { User, Mail, Lock } from "lucide-react";
+import { auth } from "../firebase";
+import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function Signup() {
-  const navigate = useNavigate();
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [err, setErr] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const submit = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    setErr("");
-
-    if (password !== confirm) {
-      return setErr("Passwords do not match");
-    }
-
+    setError("");
+    setLoading(true);
     try {
-      const { user } = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      await updateProfile(user, { displayName: name });
-
-      // ✅ updated navigation
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      if (name) await updateProfile(cred.user, { displayName: name });
       navigate("/dashboard", { replace: true });
-
-    } catch (e) {
-      setErr(e.message);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const google = async () => {
+  const handleGoogle = async () => {
+    setError("");
     try {
-      await signInWithPopup(auth, googleProvider);
-
-      // ✅ updated navigation
+      await signInWithPopup(auth, new GoogleAuthProvider());
       navigate("/dashboard", { replace: true });
-
-    } catch (e) {
-      setErr(e.message);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
   return (
-    <div className="min-h-screen px-6 pt-16 pb-10">
-      <h1 className="text-3xl font-bold">Create Account</h1>
-      <p className="text-white/60 mt-2 mb-8">Sign up to get started</p>
+    <div className="min-h-screen app-gradient text-white px-6 py-10 overflow-y-auto">
+      <div className="max-w-md mx-auto">
+        <h1 className="text-3xl font-bold mb-2">Create Account </h1>
+        <p className="text-white/70 mb-8">Sign up to get started</p>
 
-      <form onSubmit={submit} className="space-y-4">
-        <div className="relative">
-          <User
-            size={18}
-            className="absolute left-3 top-3.5 text-white/40"
-          />
-          <input
-            className="input pl-10"
-            placeholder="Full Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
+        {error && (
+          <div className="mb-4 p-3 rounded-lg bg-red-500/20 text-red-200 text-sm">
+            {error}
+          </div>
+        )}
 
-        <div className="relative">
-          <Mail
-            size={18}
-            className="absolute left-3 top-3.5 text-white/40"
-          />
-          <input
-            className="input pl-10"
-            placeholder="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+        <form onSubmit={handleSignup} className="space-y-4">
+          {/* Name */}
+          <div className="relative">
+            <User className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 z-10" />
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Full Name"
+              className="relative w-full glass rounded-xl pl-12 pr-4 py-4 outline-none placeholder-white/50 text-white"
+              style={{ background: "transparent" }}
+            />
+          </div>
 
-        <div className="relative">
-          <Lock
-            size={18}
-            className="absolute left-3 top-3.5 text-white/40"
-          />
-          <input
-            className="input pl-10"
-            placeholder="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
+          {/* Email */}
+          <div className="relative">
+            <Mail className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 z-10" />
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="relative w-full glass rounded-xl pl-12 pr-4 py-4 outline-none placeholder-white/50 text-white"
+              style={{ background: "transparent" }}
+            />
+          </div>
 
-        <div className="relative">
-          <Lock
-            size={18}
-            className="absolute left-3 top-3.5 text-white/40"
-          />
-          <input
-            className="input pl-10"
-            placeholder="Confirm Password"
-            type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            required
-          />
-        </div>
+          {/* Password */}
+          <div className="relative">
+            <Lock className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 z-10" />
+            <input
+              type={showPwd ? "text" : "password"}
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="relative w-full glass rounded-xl pl-12 pr-12 py-4 outline-none placeholder-white/50 text-white"
+              style={{ background: "transparent" }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPwd((v) => !v)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-10"
+              tabIndex={-1}
+            >
+              {showPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
 
-        {err && <p className="text-pink-400 text-sm">{err}</p>}
+          <button
+            disabled={loading}
+            className="w-full py-4 rounded-xl brand-gradient font-semibold disabled:opacity-60"
+          >
+            {loading ? "Creating..." : "Sign Up"}
+          </button>
+        </form>
 
-        <button className="btn-primary">Sign Up</button>
-      </form>
-
-      <div className="flex items-center gap-2 my-6">
-        <div className="flex-1 h-px bg-white/10" />
-        <span className="text-xs text-white/40">
+        <div className="flex items-center gap-3 my-6 text-white/50 text-sm">
+          <div className="flex-1 h-px bg-white/10" />
           or continue with
-        </span>
-        <div className="flex-1 h-px bg-white/10" />
-      </div>
+          <div className="flex-1 h-px bg-white/10" />
+        </div>
 
-      <button onClick={google} className="btn-ghost">
-        <img
-          src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-          className="w-5 h-5"
-          alt="google"
-        />
-        Continue with Google
-      </button>
-
-      {/* ✅ Updated Login Navigation */}
-      <p className="text-center text-sm text-white/60 mt-8">
-        Already have an account?{" "}
         <button
-          onClick={() => navigate("/login", { replace: true })}
-          className="text-brand font-medium"
+          onClick={handleGoogle}
+          className="w-full py-4 rounded-xl glass flex items-center justify-center gap-3 font-medium"
         >
-          Login
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt=""
+            className="w-5 h-5"
+          />
+          Continue with Google
         </button>
-      </p>
+
+        <p className="text-center text-white/70 mt-8">
+          Already have an account?{" "}
+          <Link to="/login" className="text-indigo-300 font-semibold">
+            Login
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

@@ -2,18 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root { height: 100%; }
+/* ---------- Base ---------- */
+html, body, #root {
+  height: auto;
+  min-height: 100%;
+  overflow-y: auto;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background: #0b0b2a;
   color: #fff;
-  background: #0a0a1a;
+  -webkit-font-smoothing: antialiased;
 }
+
+* { box-sizing: border-box; }
+
+/* ---------- Midnight Indigo gradient background ---------- */
+.app-gradient {
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(99,102,241,0.25), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(168,85,247,0.20), transparent 60%),
+    linear-gradient(180deg, #0b0b2a 0%, #0d0b35 50%, #0a0a23 100%);
+}
+
+/* ---------- Brand button gradient (screenshot color) ---------- */
+.brand-gradient {
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+  color: #fff;
+  box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.6);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.brand-gradient:hover { transform: translateY(-1px); box-shadow: 0 14px 34px -10px rgba(139,92,246,0.75); }
+.brand-gradient:active { transform: translateY(0); }
+
+/* ---------- Glass card / input ---------- */
 .glass {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
-.input { @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 outline-none focus:border-brand; }
-.btn-primary { @apply w-full py-3 rounded-xl bg-brand-gradient font-semibold text-white shadow-lg shadow-brand/30 active:scale-95 transition; }
-.btn-ghost { @apply w-full py-3 rounded-xl border border-white/15 bg-white/5 font-medium text-white flex items-center justify-center gap-2 active:scale-95 transition; }
+
+/* ensure inputs inside .glass are fully transparent so icons show through */
+.glass input,
+input.glass {
+  background: transparent;
+}
+
+/* ---------- Scrollbar (subtle) ---------- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- Utility ---------- */
+.no-tap-highlight { -webkit-tap-highlight-color: transparent; }
+
+/* ---------- Dark mode class (for Settings toggle) ---------- */
+.dark { color-scheme: dark; }

@@ -1,104 +1,133 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from "../firebase";
-import { Mail, Lock } from "lucide-react";
+import {
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
+import { auth } from "../firebase";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
-
-  const nav = useNavigate();
-
-  const [email, setEmail] = useState(""); 
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [err, setErr] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const submit = async (e) => {
-    e.preventDefault(); 
-    setErr("");
-
-    try { 
-      await signInWithEmailAndPassword(auth, email, password); 
-      nav("/dashboard", { replace: true }); // ✅ ensured
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    catch (e) { setErr(e.message); }
   };
 
-  const google = async () => {
-    try { 
-      await signInWithPopup(auth, googleProvider); 
-      nav("/dashboard", { replace: true }); // ✅ ensured
+  const handleGoogle = async () => {
+    setError("");
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError(err.message);
     }
-    catch (e) { setErr(e.message); }
   };
 
   return (
+    <div className="min-h-screen app-gradient text-white px-6 py-10 overflow-y-auto">
+      <div className="max-w-md mx-auto">
+        <h1 className="text-3xl font-bold mb-2">Welcome Back 👋</h1>
+        <p className="text-white/70 mb-8">Login to continue</p>
 
-    <div className="min-h-screen px-6 pt-16 pb-10">
+        {error && (
+          <div className="mb-4 p-3 rounded-lg bg-red-500/20 text-red-200 text-sm">
+            {error}
+          </div>
+        )}
 
-      <h1 className="text-3xl font-bold">Welcome Back 👋</h1>
-      <p className="text-white/60 mt-2 mb-8">Login to continue</p>
+        <form onSubmit={handleLogin} className="space-y-4">
+          {/* Email */}
+          <div className="relative">
+            <Mail className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 z-10" />
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="relative w-full glass rounded-xl pl-12 pr-4 py-4 outline-none placeholder-white/50 text-white"
+              style={{ background: "transparent" }}
+            />
+          </div>
 
-      <form onSubmit={submit} className="space-y-4">
+          {/* Password */}
+          <div className="relative">
+            <Lock className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 z-10" />
+            <input
+              type={showPwd ? "text" : "password"}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="relative w-full glass rounded-xl pl-12 pr-12 py-4 outline-none placeholder-white/50 text-white"
+              style={{ background: "transparent" }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPwd((v) => !v)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-10"
+              tabIndex={-1}
+            >
+              {showPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
 
-        <div className="relative">
-          <Mail size={18} className="absolute left-3 top-3.5 text-white/40"/>
-          <input 
-            className="input pl-10" 
-            placeholder="Email" 
-            value={email} 
-            onChange={e=>setEmail(e.target.value)} 
-            type="email" 
-            required
-          />
+          <div className="flex justify-end">
+            <Link to="/forgot-password" className="text-sm text-indigo-300">
+              Forgot Password?
+            </Link>
+          </div>
+
+          <button
+            disabled={loading}
+            className="w-full py-4 rounded-xl brand-gradient font-semibold disabled:opacity-60"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+
+        <div className="flex items-center gap-3 my-6 text-white/50 text-sm">
+          <div className="flex-1 h-px bg-white/10" />
+          or continue with
+          <div className="flex-1 h-px bg-white/10" />
         </div>
 
-        <div className="relative">
-          <Lock size={18} className="absolute left-3 top-3.5 text-white/40"/>
-          <input 
-            className="input pl-10" 
-            placeholder="Password" 
-            value={password} 
-            onChange={e=>setPassword(e.target.value)} 
-            type="password" 
-            required
-          />
-        </div>
-
-        <Link to="/forgot" className="block text-right text-sm text-brand">
-          Forgot Password?
-        </Link>
-
-        {err && <p className="text-pink-400 text-sm">{err}</p>}
-
-        <button className="btn-primary">Login</button>
-
-      </form>
-
-      <div className="flex items-center gap-2 my-6">
-        <div className="flex-1 h-px bg-white/10"/>
-        <span className="text-xs text-white/40">or continue with</span>
-        <div className="flex-1 h-px bg-white/10"/>
-      </div>
-
-      <button onClick={google} className="btn-ghost">
-        <img 
-          src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
-          className="w-5 h-5"
-        /> 
-        Continue with Google
-      </button>
-
-      <p className="text-center text-sm text-white/60 mt-8">
-        Don't have an account?{" "}
-        <button 
-          onClick={() => nav("/signup", { replace: true })} // ✅ ensured
-          className="text-brand font-medium"
+        <button
+          onClick={handleGoogle}
+          className="w-full py-4 rounded-xl glass flex items-center justify-center gap-3 font-medium"
         >
-          Sign Up
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt=""
+            className="w-5 h-5"
+          />
+          Continue with Google
         </button>
-      </p>
 
+        <p className="text-center text-white/70 mt-8">
+          Don't have an account?{" "}
+          <Link to="/signup" className="text-indigo-300 font-semibold">
+            Sign Up
+          </Link>
+        </p>
+      </div>
     </div>
-
   );
 }
